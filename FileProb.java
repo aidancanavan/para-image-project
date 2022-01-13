@@ -1,9 +1,10 @@
 import java.io.File;
 /**
- * Write a description of class FileProb here.
+ * Stores a file and probability value
  *
- * @author (your name)
- * @version (a version number or a date)
+ *
+ * @author Aidan Canavan
+ * @version 1.0
  */
 public class FileProb
 {

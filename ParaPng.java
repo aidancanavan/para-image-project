@@ -24,184 +24,128 @@ import javax.imageio.ImageIO;
 public class ParaPng 
 {
     // instance variables
-    File folder;
+    
+    String outputDirectory = "/Users/Aidan Canavan/Desktop/NFT/Parametric Design/outputs/";
+    Random generator = new Random(1);
     ArrayList<File> allFiles =new ArrayList<File>();
-    ArrayList<FileProb> background = new ArrayList<FileProb>();
-    ArrayList<FileProb> skin = new ArrayList<FileProb>();
-    ArrayList<FileProb> head = new ArrayList<FileProb>();
-    ArrayList<FileProb> shirt = new ArrayList<FileProb>();
-    ArrayList<FileProb> pants = new ArrayList<FileProb>();
-    ArrayList<FileProb> shoes = new ArrayList<FileProb>();
-    ArrayList<FileProb> extra = new ArrayList<FileProb>();
+    ArrayList<ArrayList<FileProb>> sortedFiles = new ArrayList();
     
-    int seedCounter =0;
+    File folder;
     
-    public ParaPng(String path)
+    
+    
+    public ParaPng(String path, ArrayList<String> fileNameRoots)
     {
-        // initialise instance variables
+        // fileNameRoots must be in layer order
         this.folder = new File(path);
         File[] fileList = folder.listFiles();
         for(File f:fileList){
             allFiles.add(f);
         }
         
-        for(File f:allFiles){
-            if(f.getName().contains("bg")){
-                background.add(new FileProb(f));
+        for(String s: fileNameRoots){
+            sortedFiles.add(new ArrayList<FileProb>());
+            
+        }
+        //must include blank png with for each fileroot name with no option
+        
+        for(File f:allFiles){//creates sorted files
+            int attributeNumber = 0;
+            for(String s: fileNameRoots){
+                if(f.getName().contains(s)){
+                    sortedFiles.get(attributeNumber).add(new FileProb(f));
+                }
+                attributeNumber++;
             }
-            if(f.getName().contains("skin")){
-                skin.add(new FileProb(f));
-            }
-            if(f.getName().contains("head")|| f.getName().contains("empty")){
-                head.add(new FileProb(f));
-            }
-            if(f.getName().contains("shirt")|| f.getName().contains("empty")){
-                shirt.add(new FileProb(f));
-            }
-            if(f.getName().contains("pants")|| f.getName().contains("empty")){
-                pants.add(new FileProb(f));
-            }
-            if(f.getName().contains("shoe")|| f.getName().contains("empty")){
-                shoes.add(new FileProb(f));
-            }
-            if(f.getName().contains("extra") || f.getName().contains("empty")){
-                extra.add(new FileProb(f));
-            }
+            
         }
         setProbs();
+        
+        //testing for prob change
+        //changeProb(.05,0,0,3);
+        //changeProb(.05,0,1,3);
+        //changeProb(.05,0,2,3);
+        //System.out.println(pickWithOdds(0));
+        /*
+        for(int x =0;x<sortedFiles.size();x++){
+            for(int y =0;y<sortedFiles.get(x).size();y++){
+                //System.out.print(" "+sortedFiles.get(x).get(y).getProb());
+            }
+            //System.out.println();
+        }
+        */
+        
     }
+    
+    public void changeProb(double newProb,int listNumber, int positionChange,int positionEffect){
+        //pick two numbers one to increase prob and one to decrease prob
+        //first number gets decreased second increased
+        double startingProb = sortedFiles.get(listNumber).get(positionChange).getProb();
+        double change = startingProb-newProb;
+        sortedFiles.get(listNumber).get(positionChange).setProb(newProb);
+        double effectProbNew = sortedFiles.get(listNumber).get(positionEffect).getProb() +change;
+        sortedFiles.get(listNumber).get(positionEffect).setProb(effectProbNew);
+        
+        
+    }
+    
     public void setProbs(){
-        for(FileProb f:background){
-            f.setProb(.10);
+        //makes base probs equal between attributes
+        for(int j =0;j<sortedFiles.size();j++){
+            double probInit = 1.0/(double)sortedFiles.get(j).size();
+            //System.out.print(probInit);
+            for(int i=0;i<sortedFiles.get(j).size();i++){
+                
+                sortedFiles.get(j).get(i).setProb(probInit);
+                
+            }
         }
-        for(FileProb f:skin){
-            f.setProb(.10);
-        }
-        for(FileProb f:head){
-            f.setProb(.10);
-        }
-        for(FileProb f:shirt){
-            f.setProb(.10);
-        }
-        for(FileProb f:pants){
-            f.setProb(.10);
-        }
-        for(FileProb f:shoes){
-            f.setProb(.10);
-        }
-        for(FileProb f:extra){
-            f.setProb(.10);
-        }
-        extra.get(0).setProb(.9);
-        extra.get(1).setProb(.25);
-        pants.get(0).setProb(.01);
-        shoes.get(0).setProb(.04);
-        shoes.get(6).setProb(.04);
-        shirt.get(0).setProb(.05);
-        shoes.get(6).setProb(.04);
         
-        //shirt
-        background.get(2).setProb(.04);
-        //System.out.println(shoes.size());
+        
     }
+    
+    public File pickWithOdds(int listNumber){
+        //this function uses Random to pick a file based on the probs in FileProb
+        
+        //this picks a File type because FileProb is no longer useful after prob has been used
+        double d =0.0;
+        
+        double test = this.generator.nextDouble();
+        
+        System.out.println(test);
+        
+        for(int i=0;i<sortedFiles.get(listNumber).size();i++){
+            d +=sortedFiles.get(listNumber).get(i).getProb();
+            if(test<=d){
+                return sortedFiles.get(listNumber).get(i).getFile();
+            }
+        }
+        
+        
+        return sortedFiles.get(listNumber).get(0).getFile();
+    }
+    
     public ArrayList<File> makeNFT(){
+        //makes a list of Files containing attributes
+        
         ArrayList<File> output = new ArrayList<File>();
-        Random generator = new Random(seedCounter);
-        //System.out.println(generator.nextDouble());
-        int at = 0;
-        while(true){
-            
-            if(generator.nextDouble()<background.get(at).getProb()){
-                output.add(background.get(at).getFile());
-                break;
-            }
-            
-            if(at==background.size() -1){at=0;}
-            
-            else{at++;}
-        }
-        at = 0;
-        while(true){
-            
-            if(generator.nextDouble()<skin.get(at).getProb()){
-                output.add(skin.get(at).getFile());
-                break;
-            }
-            
-            if(at==skin.size() -1){at=0;}
-            
-            else{at++;}
-        }
-        at = 0;
-        while(true){
-            
-            if(generator.nextDouble()<head.get(at).getProb()){
-                output.add(head.get(at).getFile());
-                break;
-            }
-            
-            if(at==head.size() -1){at=0;}
-            
-            else{at++;}
-        }
-        at = 0;
-        while(true){
-            
-            if(generator.nextDouble()<shirt.get(at).getProb()){
-                output.add(shirt.get(at).getFile());
-                break;
-            }
-            
-            if(at==shirt.size() -1){at=0;}
-            
-            else{at++;}
-        }
-        at = 0;
-        while(true){
-            
-            if(generator.nextDouble()<pants.get(at).getProb()){
-                output.add(pants.get(at).getFile());
-                break;
-            }
-            
-            if(at==pants.size() -1){at=0;}
-            
-            else{at++;}
-        }
-        at = 0;
         
-        while(true){
-            
-            if(generator.nextDouble()<shoes.get(at).getProb()){
-                output.add(shoes.get(at).getFile());
-                break;
-            }
-            
-            if(at==shoes.size() -1){at=0;}
-            
-            else{at++;}
-        }
-        at = 0;
-        while(true){
-            
-            if(generator.nextDouble()<extra.get(at).getProb()){
-                output.add(extra.get(at).getFile());
-                System.out.println(extra.get(at).getFile());
-                break;
-            }
-            
-            if(at==extra.size() -1){at=0;}
-            
-            else{at++;}
+        
+        
+        for(int p=0;p<sortedFiles.size();p++){
+            output.add(pickWithOdds(p));
         }
         
-        this.seedCounter++;
-        //System.out.println(output.size());
+        
+        
+        
         return output;
     }
     
     public ArrayList<ArrayList<File>> makeCollection(int size){
-        //we need to check to see if NFT is unique and then add to collection
+        //makes list of all attribute lists in the collection
+        
+        //first we need to check to see if NFT is unique and then add to collection
         ArrayList<ArrayList<File>> output = new ArrayList();
         
         ArrayList<File> f = makeNFT();
@@ -217,17 +161,9 @@ public class ParaPng
         return output;
     }
     
-    public File[] makeArray(ArrayList<File> nft){
-        File[] output = new File[nft.size()];
-        int counter =0;
-        for(File f:nft){
-            output[counter] = f;
-            counter++;
-        }
-        return output;
-    }
     
     public BufferedImage overlay(BufferedImage bg, BufferedImage fg){
+        //overlays two png images
         Graphics2D g = bg.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
         
@@ -240,6 +176,7 @@ public class ParaPng
     
     
     public void createOne(ArrayList<File> f,String fileName) throws IOException{
+        //makes one image using the list of files(that store each attribute)
         ArrayList<BufferedImage> images = new ArrayList<BufferedImage>();
         for(File p:f){
         images.add(ImageIO.read(p));
@@ -248,12 +185,14 @@ public class ParaPng
         for(int i=1;i<images.size();i++){
             output = overlay(output,images.get(i));
         }
-        File outputFile = new File("/Users/Aidan Canavan/Desktop/NFT/Parametric Design/outputs/"+fileName);
-        output = resize(output,350,350);
+        File outputFile = new File(this.outputDirectory+fileName);
+        output = resize(output,350,350); //xxx
         ImageIO.write(output,"png",outputFile);
     }
     public static BufferedImage resize(BufferedImage img, int newW, int newH) { 
-       Image tmp = img.getScaledInstance(newW, newH, Image.SCALE_SMOOTH);
+      //standard opensea format that looks the best is 350x350
+      //this block can be deleted or the 350x350 inputs can be changed where the xxx comment is above
+      Image tmp = img.getScaledInstance(newW, newH, Image.SCALE_SMOOTH);
       BufferedImage dimg = new BufferedImage(newW, newH, BufferedImage.TYPE_INT_ARGB);
     
       Graphics2D g2d = dimg.createGraphics();
@@ -263,6 +202,7 @@ public class ParaPng
       return dimg;
       }
     public void renderCollection(int collectionSize) throws IOException{
+        //renders entire collection of images into output directory
         ArrayList<ArrayList<File>> collection = makeCollection(collectionSize);
         int counter =0;
         
@@ -281,7 +221,16 @@ public class ParaPng
     
     
     public static void main(String[] args) throws IOException{
-        ParaPng p = new ParaPng("/Users/Aidan Canavan/Desktop/NFT/Parametric Design/Crypto Runners");
+        ArrayList<String> roots = new ArrayList<String>();
+        roots.add("bg");
+        roots.add("skin");
+        roots.add("head");
+        roots.add("shirt");
+        roots.add("pants");
+        roots.add("shoe");
+        roots.add("extra");
+        ParaPng p = new ParaPng("/Users/Aidan Canavan/Desktop/NFT/Parametric Design/Crypto Runners",roots);
+        p.renderCollection(200);
         //ArrayList<File> test = p.makeNFT();
         //p.createOne(test,"test.png");
         //p.makeCollection(10);
